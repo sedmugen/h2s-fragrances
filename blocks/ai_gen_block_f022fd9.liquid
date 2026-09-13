@@ -1,0 +1,365 @@
+{% doc %}
+  @prompt
+    Fix the variant picker JavaScript so that when a customer selects options on a product with 3 variant options (Perfume 1, Perfume 2, Perfume 3), all valid combinations are correctly enabled and selectable. Currently, some valid and available variants are being incorrectly shown as disabled/strikethrough even though they exist and are available for sale. The fix should ensure the variant availability logic correctly evaluates all 3-option combinations and only disables options that truly have no available variant match.
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-variant-picker-{{ ai_gen_id }} {
+    width: {{ block.settings.desktop_width_percent }}%;
+    max-width: 100%;
+    display: block;
+  }
+
+  .ai-variant-picker-option-{{ ai_gen_id }} {
+    margin-bottom: 20px;
+  }
+
+  .ai-variant-picker-label-{{ ai_gen_id }} {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: {{ block.settings.label_font_size }}px;
+    color: {{ block.settings.label_color }};
+  }
+
+  .ai-variant-picker-buttons-{{ ai_gen_id }} {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .ai-variant-picker-button-{{ ai_gen_id }} {
+    padding: 10px 20px;
+    border: 2px solid {{ block.settings.button_border_color }};
+    background-color: {{ block.settings.button_bg_color }};
+    color: {{ block.settings.button_text_color }};
+    border-radius: {{ block.settings.button_border_radius }}px;
+    cursor: pointer;
+    font-size: {{ block.settings.button_font_size }}px;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+
+  .ai-variant-picker-button-{{ ai_gen_id }}:hover:not(.disabled):not(.selected) {
+    border-color: {{ block.settings.button_hover_border_color }};
+    background-color: {{ block.settings.button_hover_bg_color }};
+  }
+
+  .ai-variant-picker-button-{{ ai_gen_id }}.selected {
+    border-color: {{ block.settings.button_selected_border_color }};
+    background-color: {{ block.settings.button_selected_bg_color }};
+    color: {{ block.settings.button_selected_text_color }};
+  }
+
+  .ai-variant-picker-button-{{ ai_gen_id }}.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    text-decoration: line-through;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-variant-picker-{{ ai_gen_id }} {
+      width: 100%;
+    }
+  }
+{% endstyle %}
+
+<variant-picker-{{ ai_gen_id }}
+  class="ai-variant-picker-{{ ai_gen_id }}"
+  data-product-id="{{ product.id }}"
+  {{ block.shopify_attributes }}
+>
+  {% unless product.has_only_default_variant %}
+    {% for option in product.options_with_values %}
+      <div class="ai-variant-picker-option-{{ ai_gen_id }}" data-option-index="{{ forloop.index0 }}">
+        <label class="ai-variant-picker-label-{{ ai_gen_id }}">
+          {{ option.name }}: <span class="ai-variant-picker-selected-value-{{ ai_gen_id }}">{{ option.selected_value }}</span>
+        </label>
+        <div class="ai-variant-picker-buttons-{{ ai_gen_id }}">
+          {% for value in option.values %}
+            <button
+              type="button"
+              class="ai-variant-picker-button-{{ ai_gen_id }} {% if option.selected_value == value %}selected{% endif %}"
+              data-option-value="{{ value | escape }}"
+              data-option-position="{{ option.position }}"
+            >
+              {{ value }}
+            </button>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  {% endunless %}
+</variant-picker-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class VariantPicker{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+        this.productId = this.dataset.productId;
+        this.variants = [];
+        this.currentSelections = {};
+        this.optionCount = 0;
+      }
+
+      connectedCallback() {
+        this.fetchProductData().then(() => {
+          this.initializeSelections();
+          this.setupEventListeners();
+          this.updateAvailability();
+        });
+      }
+
+      async fetchProductData() {
+        try {
+          const response = await fetch(`/products/${this.productId}.js`);
+          const productData = await response.json();
+          this.variants = productData.variants;
+          this.optionCount = productData.options.length;
+        } catch (error) {
+          console.error('Error fetching product data:', error);
+        }
+      }
+
+      initializeSelections() {
+        const optionDivs = this.querySelectorAll('[data-option-index]');
+        optionDivs.forEach((optionDiv) => {
+          const selectedButton = optionDiv.querySelector('.ai-variant-picker-button-{{ ai_gen_id }}.selected');
+          if (selectedButton) {
+            const position = selectedButton.dataset.optionPosition;
+            const value = selectedButton.dataset.optionValue;
+            this.currentSelections[`option${position}`] = value;
+          }
+        });
+      }
+
+      setupEventListeners() {
+        const buttons = this.querySelectorAll('.ai-variant-picker-button-{{ ai_gen_id }}');
+        buttons.forEach((button) => {
+          button.addEventListener('click', (e) => {
+            if (button.classList.contains('disabled')) {
+              return;
+            }
+            this.handleOptionClick(e.currentTarget);
+          });
+        });
+      }
+
+      handleOptionClick(button) {
+        const position = button.dataset.optionPosition;
+        const value = button.dataset.optionValue;
+        const optionDiv = button.closest('[data-option-index]');
+
+        optionDiv.querySelectorAll('.ai-variant-picker-button-{{ ai_gen_id }}').forEach((btn) => {
+          btn.classList.remove('selected');
+        });
+        button.classList.add('selected');
+
+        this.currentSelections[`option${position}`] = value;
+
+        const selectedValueSpan = optionDiv.querySelector('.ai-variant-picker-selected-value-{{ ai_gen_id }}');
+        if (selectedValueSpan) {
+          selectedValueSpan.textContent = value;
+        }
+
+        this.updateAvailability();
+        this.updateURL();
+      }
+
+      updateAvailability() {
+        const optionDivs = this.querySelectorAll('[data-option-index]');
+        
+        optionDivs.forEach((optionDiv) => {
+          const buttons = optionDiv.querySelectorAll('.ai-variant-picker-button-{{ ai_gen_id }}');
+          const currentPosition = buttons[0]?.dataset.optionPosition;
+
+          buttons.forEach((button) => {
+            const testValue = button.dataset.optionValue;
+            const isAvailable = this.isOptionAvailable(currentPosition, testValue);
+            
+            if (isAvailable) {
+              button.classList.remove('disabled');
+            } else {
+              button.classList.add('disabled');
+            }
+          });
+        });
+      }
+
+      isOptionAvailable(position, value) {
+        const testSelections = { ...this.currentSelections };
+        testSelections[`option${position}`] = value;
+
+        return this.variants.some((variant) => {
+          let matches = true;
+          
+          for (let i = 1; i <= this.optionCount; i++) {
+            const optionKey = `option${i}`;
+            if (testSelections[optionKey] && variant[optionKey] !== testSelections[optionKey]) {
+              matches = false;
+              break;
+            }
+          }
+          
+          return matches && variant.available;
+        });
+      }
+
+      updateURL() {
+        const matchedVariant = this.variants.find((variant) => {
+          let matches = true;
+          for (let i = 1; i <= this.optionCount; i++) {
+            const optionKey = `option${i}`;
+            if (this.currentSelections[optionKey] && variant[optionKey] !== this.currentSelections[optionKey]) {
+              matches = false;
+              break;
+            }
+          }
+          return matches;
+        });
+
+        if (matchedVariant) {
+          const url = new URL(window.location.href);
+          url.searchParams.set('variant', matchedVariant.id);
+          window.history.replaceState({}, '', url);
+
+          this.dispatchEvent(new CustomEvent('variant-change', {
+            detail: { variant: matchedVariant },
+            bubbles: true
+          }));
+        }
+      }
+    }
+
+    customElements.define('variant-picker-{{ ai_gen_id }}', VariantPicker{{ ai_gen_id }});
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Variant picker",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "desktop_width_percent",
+      "label": "Desktop width",
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "header",
+      "content": "Label style"
+    },
+    {
+      "type": "range",
+      "id": "label_font_size",
+      "label": "Font size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "color",
+      "id": "label_color",
+      "label": "Color",
+      "default": "#0e1b4d"
+    },
+    {
+      "type": "header",
+      "content": "Button style"
+    },
+    {
+      "type": "range",
+      "id": "button_font_size",
+      "label": "Font size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "button_border_radius",
+      "label": "Border radius",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "color",
+      "id": "button_bg_color",
+      "label": "Background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Text",
+      "default": "#0e1b4d"
+    },
+    {
+      "type": "color",
+      "id": "button_border_color",
+      "label": "Border",
+      "default": "#cccccc"
+    },
+    {
+      "type": "header",
+      "content": "Button hover"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_bg_color",
+      "label": "Background",
+      "default": "#f5f5f5"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_border_color",
+      "label": "Border",
+      "default": "#a07d47"
+    },
+    {
+      "type": "header",
+      "content": "Button selected"
+    },
+    {
+      "type": "color",
+      "id": "button_selected_bg_color",
+      "label": "Background",
+      "default": "#a07d47"
+    },
+    {
+      "type": "color",
+      "id": "button_selected_text_color",
+      "label": "Text",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_selected_border_color",
+      "label": "Border",
+      "default": "#a07d47"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Variant picker"
+    }
+  ]
+}
+{% endschema %}

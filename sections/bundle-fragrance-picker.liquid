@@ -1,0 +1,249 @@
+{%- comment -%}
+  Bundle Fragrance Picker — H2S Fragrances
+  Fixes the "everything crosses out" bug on Trio Madness / Signature Duo.
+
+  WHY THE NATIVE PICKER BREAKS: Shopify's built-in variant-availability script
+  expects independent option dimensions (Size x Color). A "pick N unique items
+  from ONE shared list across N positions" bundle (your 336-variant Trio, or
+  the 56-variant Duo) isn't that — so as soon as one position is picked while
+  the others are still empty, the native script can't find a full match and
+  marks every remaining option unavailable. This section replaces that picker
+  entirely: it never asks Shopify to judge availability mid-selection, it just
+  disables already-picked fragrances client-side (so duplicates are physically
+  impossible) and resolves + adds the matching variant once all picks are made.
+
+  USE FOR: Trio Madness (number_of_picks = 3) and Signature Duo (number_of_picks = 2).
+  Add ONE instance of this section per bundle product.
+
+  IMPORTANT: each "Fragrance" block's Name setting must match the variant
+  option value EXACTLY as it exists in Shopify Admin for this product
+  (case-sensitive). For Trio Madness that's currently:
+  Executive Fresh, Ivory Oud, Mystic Oud, Imperial Oud, Jaan Aura, Queen Flora,
+  Fruit Elan, Classic Homme — double check against Admin before publishing,
+  especially the "Jaan Aura" / "Jann Aura" spelling.
+{%- endcomment -%}
+
+{%- assign num_picks = section.settings.number_of_picks | plus: 0 -%}
+
+<div class="h2s-bundle-builder" data-h2s-bundle data-num-picks="{{ num_picks }}">
+  <h2 class="h2s-bb-heading">{{ section.settings.heading | default: 'Build Your Bundle' }}</h2>
+  {%- if section.settings.subheading != blank -%}
+    <p class="h2s-bb-sub">{{ section.settings.subheading }}</p>
+  {%- endif -%}
+
+  <div class="h2s-bb-picks">
+    {%- for i in (1..num_picks) -%}
+      <div class="h2s-bb-pick">
+        <label for="h2s-pick-{{ section.id }}-{{ i }}">{{ section.settings.label_prefix | default: 'Perfume' }} {{ i }}</label>
+        <select id="h2s-pick-{{ section.id }}-{{ i }}" data-h2s-pick>
+          <option value="">Choose a fragrance</option>
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'fragrance' -%}
+              <option value="{{ block.settings.name | escape }}">{{ block.settings.name }}</option>
+            {%- endif -%}
+          {%- endfor -%}
+        </select>
+      </div>
+    {%- endfor -%}
+  </div>
+
+  <div class="h2s-bb-summary" data-h2s-summary hidden>
+    <span class="h2s-bb-summary-label">Your {{ section.settings.label_prefix | default: 'Bundle' | downcase }}:</span>
+    <span data-h2s-summary-text></span>
+  </div>
+
+  <div class="h2s-bb-status" data-h2s-status>Select {{ num_picks }} different fragrances to continue.</div>
+
+  <div class="h2s-bb-buy-row">
+    <div class="h2s-bb-price" data-h2s-price>{{ product.price | money }}</div>
+    <button type="button" class="h2s-bb-add" data-h2s-add disabled>
+      {{ section.settings.button_label | default: 'Add Bundle to Cart' }}
+    </button>
+  </div>
+
+  <div class="h2s-bb-success" data-h2s-success hidden>
+    Added to cart! <a href="/cart">View cart &rarr;</a>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var root = document.querySelector('[data-h2s-bundle]');
+    if (!root) return;
+
+    var numPicks = parseInt(root.dataset.numPicks, 10);
+    var variants = {{ product.variants | json }};
+    var selects = Array.prototype.slice.call(root.querySelectorAll('[data-h2s-pick]'));
+    var statusEl = root.querySelector('[data-h2s-status]');
+    var priceEl = root.querySelector('[data-h2s-price]');
+    var addBtn = root.querySelector('[data-h2s-add]');
+    var summaryEl = root.querySelector('[data-h2s-summary]');
+    var summaryTextEl = root.querySelector('[data-h2s-summary-text]');
+    var successEl = root.querySelector('[data-h2s-success]');
+
+    function money(cents) {
+      return (cents / 100).toLocaleString(undefined, { style: 'currency', currency: '{{ shop.currency }}' });
+    }
+
+    function chosenValues() {
+      return selects.map(function (s) { return s.value; });
+    }
+
+    function syncDisabledOptions() {
+      var chosen = chosenValues().filter(Boolean);
+      selects.forEach(function (s) {
+        Array.prototype.forEach.call(s.options, function (opt) {
+          if (!opt.value) return;
+          opt.disabled = chosen.indexOf(opt.value) > -1 && s.value !== opt.value;
+        });
+      });
+    }
+
+    function findVariant(chosen) {
+      return variants.find(function (v) {
+        var opts = [v.option1, v.option2, v.option3].slice(0, numPicks);
+        return opts.every(function (o, i) { return o === chosen[i]; });
+      });
+    }
+
+    function update() {
+      syncDisabledOptions();
+      var chosen = chosenValues();
+      var complete = chosen.every(Boolean);
+
+      successEl.hidden = true;
+
+      if (!complete) {
+        statusEl.hidden = false;
+        statusEl.textContent = 'Select ' + numPicks + ' different fragrances to continue.';
+        statusEl.classList.remove('h2s-bb-status-error');
+        summaryEl.hidden = true;
+        addBtn.disabled = true;
+        return;
+      }
+
+      summaryEl.hidden = false;
+      summaryTextEl.textContent = chosen.join(' + ');
+
+      var variant = findVariant(chosen);
+
+      if (!variant) {
+        statusEl.hidden = false;
+        statusEl.textContent = 'That combination isn\'t available right now — try a different fragrance.';
+        statusEl.classList.add('h2s-bb-status-error');
+        addBtn.disabled = true;
+        return;
+      }
+
+      if (!variant.available) {
+        statusEl.hidden = false;
+        statusEl.textContent = 'This exact combination is currently sold out — try swapping one fragrance.';
+        statusEl.classList.add('h2s-bb-status-error');
+        addBtn.disabled = true;
+        priceEl.textContent = money(variant.price);
+        return;
+      }
+
+      statusEl.hidden = true;
+      priceEl.textContent = money(variant.price);
+      addBtn.disabled = false;
+      addBtn.dataset.variantId = variant.id;
+    }
+
+    selects.forEach(function (s) { s.addEventListener('change', update); });
+
+    addBtn.addEventListener('click', function () {
+      var variantId = addBtn.dataset.variantId;
+      if (!variantId) return;
+      addBtn.disabled = true;
+      addBtn.textContent = 'Adding...';
+
+      fetch('/cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: [{ id: parseInt(variantId, 10), quantity: 1 }] })
+      })
+        .then(function (res) {
+          if (!res.ok) throw new Error('Add to cart failed');
+          return res.json();
+        })
+        .then(function () {
+          document.dispatchEvent(new CustomEvent('cart:update'));
+          successEl.hidden = false;
+          addBtn.textContent = '{{ section.settings.button_label | default: "Add Bundle to Cart" }}';
+          addBtn.disabled = false;
+        })
+        .catch(function () {
+          statusEl.hidden = false;
+          statusEl.textContent = 'Something went wrong adding this to your cart — please try again.';
+          statusEl.classList.add('h2s-bb-status-error');
+          addBtn.textContent = '{{ section.settings.button_label | default: "Add Bundle to Cart" }}';
+          addBtn.disabled = false;
+        });
+    });
+
+    update();
+  })();
+</script>
+
+<style>
+  .h2s-bundle-builder{border:1px solid #e8e0d4;border-radius:12px;padding:18px;margin:18px 0;background:#fffdf9}
+  .h2s-bb-heading{font-size:18px;font-weight:700;margin:0 0 4px}
+  .h2s-bb-sub{font-size:13px;color:#666;margin:0 0 16px}
+  .h2s-bb-picks{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:12px}
+  .h2s-bb-pick{display:flex;flex-direction:column;gap:5px}
+  .h2s-bb-pick label{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a5a2b}
+  .h2s-bb-pick select{padding:11px 12px;font-size:14px;border:1px solid #d8d0c0;border-radius:8px;background:#fff;color:#1a1a1a}
+  .h2s-bb-pick select option:disabled{color:#bbb}
+  .h2s-bb-summary{font-size:13px;margin-bottom:10px;color:#333}
+  .h2s-bb-summary-label{font-weight:700;margin-right:4px}
+  .h2s-bb-status{font-size:12.5px;color:#9a4a00;background:#fff4e8;border:1px solid #ffd9ad;padding:8px 10px;border-radius:7px;margin-bottom:12px}
+  .h2s-bb-status-error{color:#a32626;background:#fdeeee;border-color:#f5c2c2}
+  .h2s-bb-buy-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .h2s-bb-price{font-size:20px;font-weight:800;color:#1a1a1a}
+  .h2s-bb-add{flex:0 0 auto;background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:13px 22px;font-size:14px;font-weight:700;cursor:pointer}
+  .h2s-bb-add:disabled{background:#ccc;cursor:not-allowed}
+  .h2s-bb-success{margin-top:12px;font-size:13.5px;font-weight:600;color:#2a7d2a;background:#eef9ee;border:1px solid #bfe7bf;padding:9px 12px;border-radius:8px}
+  .h2s-bb-success a{color:#2a7d2a;text-decoration:underline}
+  @media (min-width:600px){.h2s-bb-picks{grid-template-columns:repeat(3,1fr)}}
+</style>
+
+{% schema %}
+{
+  "name": "Bundle Fragrance Picker",
+  "tag": "div",
+  "settings": [
+    {"type":"select","id":"number_of_picks","label":"Number of fragrances to pick","options":[{"value":"2","label":"2 (Signature Duo)"},{"value":"3","label":"3 (Trio Madness)"}],"default":"3"},
+    {"type":"text","id":"heading","label":"Heading","default":"Build Your Trio"},
+    {"type":"text","id":"subheading","label":"Subheading","default":"Pick 3 different fragrances — no repeats."},
+    {"type":"text","id":"label_prefix","label":"Pick label prefix","default":"Perfume"},
+    {"type":"text","id":"button_label","label":"Button label","default":"Add Bundle to Cart"}
+  ],
+  "blocks": [
+    {
+      "type": "fragrance",
+      "name": "Fragrance",
+      "settings": [
+        {"type":"text","id":"name","label":"Name (must exactly match the variant option value in Shopify Admin)"}
+      ]
+    }
+  ],
+  "max_blocks": 12,
+  "presets": [
+    {
+      "name": "Bundle Fragrance Picker",
+      "settings": { "number_of_picks": "3", "heading": "Build Your Trio", "subheading": "Pick 3 different fragrances — no repeats." },
+      "blocks": [
+        {"type":"fragrance","settings":{"name":"Executive Fresh"}},
+        {"type":"fragrance","settings":{"name":"Ivory Oud"}},
+        {"type":"fragrance","settings":{"name":"Mystic Oud"}},
+        {"type":"fragrance","settings":{"name":"Imperial Oud"}},
+        {"type":"fragrance","settings":{"name":"Jaan Aura"}},
+        {"type":"fragrance","settings":{"name":"Queen Flora"}},
+        {"type":"fragrance","settings":{"name":"Fruit Elan"}},
+        {"type":"fragrance","settings":{"name":"Classic Homme"}}
+      ]
+    }
+  ]
+}
+{% endschema %}
