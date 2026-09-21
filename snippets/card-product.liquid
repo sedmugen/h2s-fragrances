@@ -191,15 +191,14 @@
 
   {%- assign revitoStarsY = revitoStarsY | round: 2 -%}
 
-<a style="text-decoration: none;color: inherit;" title="{{ revitoStars }}" href="{{ card_product.url }}#revito_iframe">
-<span style="display:inline-block">
-
-    <div style="color: #c5c5c5; text-shadow: 1px 1px 1px #a2a2a2;unicode-bidi: bidi-override;font-size: 17px;position: relative;" class="revito-star-ratings-grey">
-      <div style="--stars:{{revitoStarsY}}%; color: #ffd700;text-shadow: 1px 1px 1px #a2a2a2;position: absolute;z-index: 1;display: flex;left: 0;top:0;width: var(--stars);overflow: hidden;" class="revito-star-ratings-gold">★★★★★</div>
+<a style="text-decoration: none;color: inherit; display: inline-flex; align-items: center; gap: 0.4rem; margin: 0.4rem 0;" title="{{ revitoStars }}" href="{{ card_product.url }}#revito_iframe">
+  <span style="display:inline-block">
+    <div style="color: rgba(18, 18, 18, 0.15); unicode-bidi: bidi-override; font-size: 13px; position: relative;" class="revito-star-ratings-grey">
+      <div style="--stars:{{revitoStarsY}}%; color: var(--h2s-color-accent, #AB833C); position: absolute; z-index: 1; display: flex; left: 0; top:0; width: var(--stars); overflow: hidden;" class="revito-star-ratings-gold">★★★★★</div>
     ★★★★★</div>
-
-</span>
-<span style="display:inline-block;font-weight: 600;font-size: 11px;white-space: nowrap;"> ({{ revitoReviews }})</span></a>
+  </span>
+  <span style="display:inline-block; font-size: 1.1rem; color: var(--h2s-color-muted, #666); white-space: nowrap;">({{ revitoReviews }})</span>
+</a>
 
 {%- endif -%}
             {%- if show_vendor -%}
@@ -452,15 +451,14 @@
 
   {%- assign revitoStarsY = revitoStarsY | round: 2 -%}
 
-<a style="text-decoration: none;color: inherit;" title="{{ revitoStars }}" href="{{ card_product.url }}#revito_iframe">
-<span style="display:inline-block">
-
-    <div style="color: #c5c5c5; text-shadow: 1px 1px 1px #a2a2a2;unicode-bidi: bidi-override;font-size: 17px;position: relative;" class="revito-star-ratings-grey">
-      <div style="--stars:{{revitoStarsY}}%; color: #ffd700;text-shadow: 1px 1px 1px #a2a2a2;position: absolute;z-index: 1;display: flex;left: 0;top:0;width: var(--stars);overflow: hidden;" class="revito-star-ratings-gold">★★★★★</div>
+<a style="text-decoration: none;color: inherit; display: inline-flex; align-items: center; gap: 0.4rem; margin: 0.4rem 0;" title="{{ revitoStars }}" href="{{ card_product.url }}#revito_iframe">
+  <span style="display:inline-block">
+    <div style="color: rgba(18, 18, 18, 0.15); unicode-bidi: bidi-override; font-size: 13px; position: relative;" class="revito-star-ratings-grey">
+      <div style="--stars:{{revitoStarsY}}%; color: var(--h2s-color-accent, #AB833C); position: absolute; z-index: 1; display: flex; left: 0; top:0; width: var(--stars); overflow: hidden;" class="revito-star-ratings-gold">★★★★★</div>
     ★★★★★</div>
-
-</span>
-<span style="display:inline-block;font-weight: 600;font-size: 11px;white-space: nowrap;"> ({{ revitoReviews }})</span></a>
+  </span>
+  <span style="display:inline-block; font-size: 1.1rem; color: var(--h2s-color-muted, #666); white-space: nowrap;">({{ revitoReviews }})</span>
+</a>
 
 {%- endif -%}
             {%- if show_vendor -%}

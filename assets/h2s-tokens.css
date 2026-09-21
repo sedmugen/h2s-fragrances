@@ -1,0 +1,475 @@
+/* ==========================================================================
+   H2S Fragrances — Design Tokens & Visual Foundation
+   Milestone 1: Visual Foundation
+   ========================================================================== */
+
+:root {
+  /* ------------------------------------------------------------------------
+     1. Core Palette Tokens
+     Warm ivory commerce surface, deep ink typography, sparing warm brass
+     ------------------------------------------------------------------------ */
+  --h2s-color-bg-primary: #FBF9F5;
+  --h2s-color-bg-secondary: #FFFFFF;
+  --h2s-color-bg-dark: #121212;
+  --h2s-color-ink: #121212;
+  --h2s-color-ink-rgb: 18, 18, 18;
+  --h2s-color-muted: #666660;
+  --h2s-color-border: rgba(18, 18, 18, 0.08);
+  --h2s-color-border-subtle: rgba(18, 18, 18, 0.04);
+  --h2s-color-accent: #AB833C;
+  --h2s-color-accent-hover: #96702e;
+
+  /* ------------------------------------------------------------------------
+     2. Page Layout & Rhythm
+     ------------------------------------------------------------------------ */
+  --h2s-max-width: 1280px;
+  --h2s-gutter-mobile: 1.6rem;
+  --h2s-gutter-tablet: 3.2rem;
+  --h2s-gutter-desktop: clamp(3.2rem, 4vw, 5rem);
+  --h2s-section-spacing: clamp(4rem, 6vw, 8rem);
+  --h2s-text-max-width: 68ch;
+
+  /* ------------------------------------------------------------------------
+     3. Typography Scale & Hierarchy
+     ------------------------------------------------------------------------ */
+  --h2s-font-size-hero: clamp(3.2rem, 5vw + 1rem, 5.6rem);
+  --h2s-font-size-h1: clamp(2.4rem, 3vw + 0.5rem, 3.8rem);
+  --h2s-font-size-h2: clamp(2rem, 2.2vw + 0.4rem, 2.8rem);
+  --h2s-font-size-h3: clamp(1.6rem, 1.4vw + 0.4rem, 2.2rem);
+  --h2s-font-size-body: 1.5rem;
+  --h2s-font-size-body-sm: 1.3rem;
+  --h2s-font-size-eyebrow: 1.1rem;
+  --h2s-font-size-price: 1.5rem;
+  --h2s-font-size-nav: 1.3rem;
+  --h2s-font-size-btn: 1.3rem;
+
+  /* Line Heights & Letter Spacing */
+  --h2s-lh-display: 1.15;
+  --h2s-lh-heading: 1.25;
+  --h2s-lh-body: 1.6;
+  --h2s-ls-eyebrow: 0.14em;
+  --h2s-ls-nav: 0.1em;
+  --h2s-ls-btn: 0.12em;
+  --h2s-ls-heading: 0.02em;
+
+  /* ------------------------------------------------------------------------
+     4. Button System Sizing & Architecture
+     ------------------------------------------------------------------------ */
+  --h2s-btn-height: 4.8rem;
+  --h2s-btn-height-sm: 4rem;
+  --h2s-btn-radius: 0px;
+  --h2s-btn-padding: 0 2.8rem;
+
+  /* ------------------------------------------------------------------------
+     5. Transitions & Motion
+     ------------------------------------------------------------------------ */
+  --h2s-duration-fast: 150ms;
+  --h2s-duration-base: 250ms;
+  --h2s-duration-slow: 400ms;
+  --h2s-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==========================================================================
+   Global Baseline Resets & Editorial Alignment
+   ========================================================================== */
+
+/* Page Background & Overall Canvas */
+body {
+  background-color: var(--h2s-color-bg-primary);
+  color: var(--h2s-color-ink);
+  letter-spacing: 0.015em;
+  line-height: var(--h2s-lh-body);
+}
+
+/* Subtle, unornamented gradient reset: ensure body remains warm ivory */
+.gradient {
+  background: var(--h2s-color-bg-primary);
+}
+
+/* Container Gutters */
+.page-width {
+  max-width: var(--h2s-max-width);
+  padding: 0 var(--h2s-gutter-mobile);
+}
+
+@media screen and (min-width: 750px) {
+  .page-width {
+    padding: 0 var(--h2s-gutter-tablet);
+  }
+}
+
+@media screen and (min-width: 990px) {
+  .page-width {
+    padding: 0 var(--h2s-gutter-desktop);
+  }
+}
+
+/* ==========================================================================
+   Typography Hierarchy
+   ========================================================================== */
+
+/* Display / Hero */
+.h0,
+.hxl {
+  font-size: var(--h2s-font-size-hero);
+  line-height: var(--h2s-lh-display);
+  letter-spacing: -0.01em;
+  font-weight: 500;
+}
+
+/* Section Headings */
+h1,
+.h1 {
+  font-size: var(--h2s-font-size-h1);
+  line-height: var(--h2s-lh-heading);
+  letter-spacing: var(--h2s-ls-heading);
+  font-weight: 500;
+}
+
+h2,
+.h2 {
+  font-size: var(--h2s-font-size-h2);
+  line-height: var(--h2s-lh-heading);
+  letter-spacing: var(--h2s-ls-heading);
+  font-weight: 500;
+}
+
+h3,
+.h3 {
+  font-size: var(--h2s-font-size-h3);
+  line-height: var(--h2s-lh-heading);
+  letter-spacing: var(--h2s-ls-heading);
+  font-weight: 500;
+}
+
+/* Eyebrow / Sub-labels */
+.caption-with-letter-spacing {
+  font-size: var(--h2s-font-size-eyebrow);
+  letter-spacing: var(--h2s-ls-eyebrow);
+  line-height: 1.3;
+  text-transform: uppercase;
+  color: var(--h2s-color-muted);
+  font-weight: 500;
+}
+
+/* Body & Utilities */
+.text-body,
+p {
+  line-height: var(--h2s-lh-body);
+}
+
+/* Links */
+.link {
+  text-decoration: underline;
+  text-underline-offset: 0.35rem;
+  transition: opacity var(--h2s-duration-fast) var(--h2s-ease);
+}
+
+.link:hover {
+  opacity: 0.75;
+}
+
+/* ==========================================================================
+   Button System
+   Clean, architectural, rectangular buttons (no pill shapes)
+   ========================================================================== */
+
+.button,
+.shopify-challenge__button,
+.customer button,
+button.shopify-payment-button__button--unbranded {
+  min-height: var(--h2s-btn-height);
+  padding: var(--h2s-btn-padding);
+  font-size: var(--h2s-font-size-btn);
+  letter-spacing: var(--h2s-ls-btn);
+  text-transform: uppercase;
+  font-weight: 600;
+  border-radius: var(--h2s-btn-radius) !important;
+  border: 1px solid var(--h2s-color-ink);
+  background-color: var(--h2s-color-ink);
+  color: #FFFFFF;
+  transition: background-color var(--h2s-duration-fast) var(--h2s-ease),
+              color var(--h2s-duration-fast) var(--h2s-ease),
+              border-color var(--h2s-duration-fast) var(--h2s-ease),
+              opacity var(--h2s-duration-fast) var(--h2s-ease);
+  position: relative;
+  box-shadow: none !important;
+}
+
+/* Remove Dawn/Refresh pseudo-element double outline / bubble shadows */
+.button:before,
+.shopify-challenge__button:before,
+.customer button:before,
+.shopify-payment-button__button--unbranded:before {
+  display: none !important;
+}
+
+.button:after,
+.shopify-challenge__button:after,
+.customer button:after,
+.shopify-payment-button__button--unbranded:after {
+  display: none !important;
+}
+
+/* Primary Button Hover */
+.button:not([disabled]):hover,
+.shopify-challenge__button:hover,
+.customer button:hover,
+button.shopify-payment-button__button--unbranded:hover {
+  background-color: #2b2b2b;
+  border-color: #2b2b2b;
+  color: #FFFFFF;
+}
+
+/* Secondary Button (Outlined Architectural) */
+.button--secondary {
+  background-color: transparent !important;
+  color: var(--h2s-color-ink) !important;
+  border: 1px solid var(--h2s-color-ink) !important;
+}
+
+.button--secondary:not([disabled]):hover {
+  background-color: var(--h2s-color-ink) !important;
+  color: #FFFFFF !important;
+  border-color: var(--h2s-color-ink) !important;
+}
+
+/* Tertiary / Text Button */
+.button--tertiary {
+  background-color: transparent !important;
+  border: none !important;
+  color: var(--h2s-color-ink) !important;
+  padding: 0.5rem 0 !important;
+  min-height: auto !important;
+  min-width: auto !important;
+  text-decoration: underline;
+  text-underline-offset: 0.35rem;
+}
+
+.button--tertiary:not([disabled]):hover {
+  opacity: 0.7;
+}
+
+/* Accessible Focus States (WCAG 2.2 AA) */
+.button:focus-visible,
+.customer button:focus-visible,
+button.shopify-payment-button__button--unbranded:focus-visible,
+a.link:focus-visible {
+  outline: 2px solid var(--h2s-color-ink);
+  outline-offset: 3px;
+}
+
+/* Disabled State */
+.button[disabled],
+.button.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Announcement Bar Refinement
+   Quiet, single-line editorial announcement
+   ========================================================================== */
+
+.announcement-bar {
+  background-color: var(--h2s-color-bg-primary);
+  border-bottom: 1px solid var(--h2s-color-border);
+  min-height: 3.6rem;
+  display: flex;
+  align-items: center;
+}
+
+.announcement-bar__message {
+  font-size: var(--h2s-font-size-eyebrow);
+  letter-spacing: var(--h2s-ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--h2s-color-ink);
+  font-weight: 500;
+  padding: 0.8rem 0;
+  margin: 0;
+}
+
+.announcement-bar__link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.announcement-bar__link:hover .announcement-bar__message {
+  opacity: 0.8;
+}
+
+/* ==========================================================================
+   Header Refinement
+   Minimal fragrance brand header
+   ========================================================================== */
+
+.header-wrapper {
+  background-color: var(--h2s-color-bg-primary);
+}
+
+.header-wrapper--border-bottom {
+  border-bottom: 1px solid var(--h2s-color-border);
+}
+
+.header {
+  padding-top: 1.2rem;
+  padding-bottom: 1.2rem;
+}
+
+@media screen and (min-width: 990px) {
+  .header {
+    padding-top: 1.6rem;
+    padding-bottom: 1.6rem;
+  }
+}
+
+/* Navigation Links */
+.list-menu__item--link {
+  font-size: var(--h2s-font-size-nav);
+  letter-spacing: var(--h2s-ls-nav);
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--h2s-color-ink);
+  padding: 0.8rem 1.6rem;
+  transition: opacity var(--h2s-duration-fast) var(--h2s-ease);
+}
+
+.list-menu__item--link:hover {
+  opacity: 0.65;
+}
+
+/* Header Icons (Search, Cart, Account) */
+.header__icon {
+  color: var(--h2s-color-ink);
+  transition: opacity var(--h2s-duration-fast) var(--h2s-ease);
+}
+
+.header__icon:hover {
+  opacity: 0.65;
+}
+
+.header__icon .icon {
+  width: 2rem;
+  height: 2rem;
+}
+
+/* Cart Count Bubble */
+.cart-count-bubble {
+  background-color: var(--h2s-color-ink);
+  color: #FFFFFF;
+  font-size: 1rem;
+  font-weight: 600;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  bottom: 0.6rem;
+  left: 2rem;
+}
+
+/* ==========================================================================
+   Product Card Refinement
+   Edge-to-edge packshots, clean typography, restrained secondary info
+   ========================================================================== */
+
+.card-wrapper.product-card-wrapper {
+  border-radius: 0 !important;
+}
+
+.product-card-wrapper .card {
+  border-radius: 0 !important;
+  border: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.product-card-wrapper .card:before,
+.product-card-wrapper .card:after,
+.product-card-wrapper .card__inner:before,
+.product-card-wrapper .card__inner:after {
+  display: none !important;
+  box-shadow: none !important;
+}
+
+/* Edge-to-edge product media */
+.product-card-wrapper .card__inner {
+  border-radius: 0 !important;
+  border: 1px solid var(--h2s-color-border-subtle);
+  background-color: var(--h2s-color-bg-secondary);
+  overflow: hidden;
+}
+
+.product-card-wrapper .card__media {
+  margin: 0 !important;
+  width: 100% !important;
+  border-radius: 0 !important;
+}
+
+/* Product Card Information */
+.product-card-wrapper .card__content {
+  padding: 1.4rem 0 0 0;
+}
+
+.product-card-wrapper .card__information {
+  padding: 0;
+}
+
+.product-card-wrapper .card__heading {
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--h2s-color-ink);
+  line-height: 1.35;
+  margin-bottom: 0.4rem;
+}
+
+.product-card-wrapper .card__heading a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.product-card-wrapper .card__heading a:hover {
+  opacity: 0.7;
+}
+
+/* Product Price in Card */
+.product-card-wrapper .price {
+  font-size: var(--h2s-font-size-price);
+  letter-spacing: 0.04em;
+  color: var(--h2s-color-ink);
+  font-weight: 500;
+}
+
+.product-card-wrapper .price--on-sale .price-item--regular {
+  font-size: 1.3rem;
+  color: var(--h2s-color-muted);
+}
+
+/* Badges: Minimal & Architectural */
+.badge {
+  border-radius: 0 !important;
+  font-size: 1rem !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  font-weight: 600 !important;
+  padding: 0.4rem 0.8rem !important;
+  border: none !important;
+}
+
+.badge.color-accent-2 {
+  background-color: var(--h2s-color-accent) !important;
+  color: #FFFFFF !important;
+}
+
+.badge.color-background-1 {
+  background-color: var(--h2s-color-ink) !important;
+  color: #FFFFFF !important;
+}
+
+/* Subtle image hover effect */
+@media screen and (min-width: 990px) {
+  .product-card-wrapper:hover .media.media--hover-effect > img:first-child:only-child {
+    transform: scale(1.02);
+    transition: transform var(--h2s-duration-slow) var(--h2s-ease);
+  }
+}
